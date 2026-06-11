@@ -1,23 +1,24 @@
-# ComfyUI RTX PRO 6000 Blackwell Template
+# ComfyUI RTX PRO 6000 Blackwell + Flux2-Klein Template
 
-**Optimized Docker template for Runpod on RTX PRO 6000 Blackwell (sm_120) with CUDA 12.8 + Python 3.12**
+Optimized Docker template for **RTX PRO 6000 Blackwell** (sm_120) on Runpod.
 
-## Features
-- Base: Official Runpod PyTorch cu1281-torch280-ubuntu2404
-- Pre-installed: ComfyUI + Manager + KJNodes + VideoHelperSuite
-- SageAttention, Triton, Flash Attention (Blackwell compatible)
-- JupyterLab + Terminal + SSH + nginx ready
-- Optimized env vars for Blackwell stability
+### Features
+- **Base**: `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404`
+- **CUDA**: 12.8.1
+- **Python**: 3.12
+- Pre-installed:
+  - SageAttention 2.2.0
+  - Triton, bitsandbytes, xformers
+  - Flash Attention (optional)
+  - ComfyUI + Manager + KJNodes + VideoHelperSuite
+- Blackwell-specific optimizations (`TORCH_CUDA_ARCH_LIST`, memory settings)
+- Proper Runpod startup (JupyterLab, nginx, SSH)
 
-## Deployment on Runpod
-1. Build and push this image to Docker Hub
-2. Create custom template using your image
-3. Set filters: CUDA 12.8, RTX PRO 6000
-4. Container Disk: 500GB+
+---
 
-## Usage
-- ComfyUI: Port 8188
-- Jupyter: Port 8888
-- Use KJNodes Patch Sage Attention node for best performance
+### Deployment on Runpod
 
-Later extensions will include Klein models/LoRAs.
+1. **Build & Push** the image:
+   ```bash
+   docker build -t vixenquest/comfyui-rtx-pro-6000-flux2klein:latest .
+   docker push vixenquest/comfyui-rtx-pro-6000-flux2klein:latest
