@@ -1,30 +1,34 @@
 #!/bin/bash
-# Prevent multiple runs
-if [ -f /workspace/.post_start_completed ]; then
+LOCK="/workspace/.post_start_done"
+
+if [ -f "$LOCK" ]; then
     exit 0
 fi
 
-cd /workspace/ComfyUI 2>/dev/null || { echo "ComfyUI directory not found"; exit 0; }
-
 echo "========================================
-✅ Blackwell Setup Verification
+✅ Blackwell Post-Start Verification
 ========================================"
+
+cd /workspace/ComfyUI 2>/dev/null || {
+    echo "❌ ComfyUI still not found"
+    touch "$LOCK"
+    exit 0
+}
 
 python -c "
 import torch
 print('Torch:', torch.__version__)
 print('CUDA:', torch.version.cuda)
 print('Device:', torch.cuda.get_device_name(0))
-arch_list = torch.cuda.get_arch_list() if torch.cuda.is_available() else []
-print('Arch list:', arch_list)
-print('sm_120 supported:', any('sm_120' in arch or '12.0' in arch for arch in arch_list))
-"
+arch = torch.cuda.get_arch_list() if torch.cuda.is_available() else []
+print('Arch list:', arch)
+print('sm_120 supported:', any('sm_120' in a or '12.0' in a for a in arch))
+" 2>&1 | tee /workspace/setup.log
 
 echo "
 🚀 ComfyUI ready on port 8188
 Jupyter on 8888
-→ Use KJNodes 'Patch Sage Attention' node (NO --use-sage-attention flag on Blackwell)
+→ Use KJNodes 'Patch Sage Attention' node
 "
 
-# Mark as completed
-touch /workspace/.post_start_completed
+touch "$LOCK"
