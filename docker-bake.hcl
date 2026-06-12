@@ -1,5 +1,8 @@
 target "default" {
   dockerfile = "Dockerfile"
-  tags = ["yourusername/comfyui-rtx-pro-6000-blackwell:latest"]
+  tags = [
+    "aptauyan/comfyui-rtx-pro-6000-flux2klein:latest",
+    "aptauyan/comfyui-rtx-pro-6000-flux2klein:${TAG:-latest}"
+  ]
   platforms = ["linux/amd64"]
 }
