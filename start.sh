@@ -1,20 +1,10 @@
 #!/bin/bash
-set -e
+# Custom entrypoint. RunPod's original /start.sh (Jupyter, nginx, SSH) is
+# intact because our Dockerfile copies this file as /custom_start.sh.
 
-echo "🚀 Starting official Runpod services (nginx, SSH, Jupyter)..."
-/start.sh &
-
-echo "⏳ Waiting for ComfyUI to be ready..."
-for i in {1..40}; do
-    if [ -d "/workspace/ComfyUI" ] && [ -f "/workspace/ComfyUI/main.py" ]; then
-        echo "✅ ComfyUI directory found"
-        break
-    fi
-    sleep 8
-done
-
-echo "🔄 Running post-start setup once..."
+echo "🔄 Running ComfyUI post-start setup in background..."
 /post_start.sh &
 
-echo "✅ Container startup completed"
-wait
+echo "🚀 Starting RunPod services (nginx, SSH, Jupyter)..."
+# exec in the FOREGROUND — this keeps the container alive.
+exec /start.sh

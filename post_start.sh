@@ -1,42 +1,44 @@
 #!/bin/bash
-LOCK_FILE="/workspace/.post_start_completed"
-
-if [ -f "$LOCK_FILE" ]; then
-    exit 0
-fi
+# Runs in the background from /custom_start.sh.
 
 echo "========================================
 ✅ Blackwell Setup Verification
 ========================================"
 
-# Wait for ComfyUI
-for i in {1..30}; do
-    if [ -d "/workspace/ComfyUI" ] && [ -f "/workspace/ComfyUI/main.py" ]; then
-        break
-    fi
-    sleep 10
-done
-
-cd /workspace/ComfyUI 2>/dev/null || {
-    echo "❌ ComfyUI directory not found"
-    touch "$LOCK_FILE"
-    exit 0
-}
-
+mkdir -p /workspace
 python -c "
 import torch
 print('Torch:', torch.__version__)
 print('CUDA:', torch.version.cuda)
-print('Device:', torch.cuda.get_device_name(0))
-arch = torch.cuda.get_arch_list() if torch.cuda.is_available() else []
-print('Arch list:', arch)
-print('sm_120 supported:', any('sm_120' in a or '12.0' in a for a in arch))
+print('Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU')
+print('Arch list:', torch.cuda.get_arch_list() if torch.cuda.is_available() else 'N/A')
+print('sm_120 supported:', any('12.0' in arch for arch in (torch.cuda.get_arch_list() if torch.cuda.is_available() else [])))
 " 2>&1 | tee /workspace/setup.log
 
-echo "
-🚀 ComfyUI ready on port 8188
-Jupyter on 8888
-→ Use KJNodes 'Patch Sage Attention' node
-"
+# --- Sync ComfyUI from the image into the (volume-mounted) workspace ---
+# RunPod mounts a volume over /workspace, so the baked-in copy lives at /ComfyUI.
+if [ ! -d /workspace/ComfyUI ]; then
+    if [ -d /ComfyUI ]; then
+        echo "📦 First boot: copying ComfyUI into /workspace (persistent volume)..."
+        cp -a /ComfyUI /workspace/ComfyUI
+    else
+        echo "❌ /ComfyUI not found in image — cannot continue."
+        exit 1
+    fi
+else
+    echo "📂 Existing /workspace/ComfyUI found — keeping it (models/outputs preserved)."
+fi
 
-touch "$LOCK_FILE"
+cd /workspace/ComfyUI || { echo "ComfyUI not found"; exit 1; }
+
+# --- Actually launch ComfyUI ---
+# NOTE: no --use-sage-attention flag on Blackwell; use KJNodes 'Patch Sage Attention' node.
+echo "🚀 Launching ComfyUI on port 8188..."
+nohup python main.py --listen 0.0.0.0 --port 8188 \
+    > /workspace/comfyui.log 2>&1 &
+
+echo "
+🚀 ComfyUI starting on port 8188 (log: /workspace/comfyui.log)
+Jupyter on 8888
+→ Use KJNodes 'Patch Sage Attention' node (NO --use-sage-attention flag on Blackwell)
+"

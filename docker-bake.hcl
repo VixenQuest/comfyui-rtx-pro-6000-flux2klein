@@ -1,8 +1,10 @@
-target "default" {
+group "default" {
+  targets = ["comfyui"]
+}
+
+target "comfyui" {
+  context    = "."
   dockerfile = "Dockerfile"
-  tags = [
-    "aptauyan/comfyui-rtx-pro-6000-flux2klein:latest",
-    "aptauyan/comfyui-rtx-pro-6000-flux2klein:${TAG:-latest}"
-  ]
-  platforms = ["linux/amd64"]
+  tags       = ["vixenquest/comfyui-rtx-pro-6000-flux2klein:latest"]
+  platforms  = ["linux/amd64"]
 }
