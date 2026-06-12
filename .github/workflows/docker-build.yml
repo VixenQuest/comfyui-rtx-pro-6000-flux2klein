@@ -3,7 +3,7 @@ name: Build & Push to Docker Hub
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:  # Allows you to trigger manually
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,6 +27,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: vixenquest/comfyui-rtx-pro-6000-flux2klein:latest
+          tags: aptauyan/comfyui-rtx-pro-6000-flux2klein:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
